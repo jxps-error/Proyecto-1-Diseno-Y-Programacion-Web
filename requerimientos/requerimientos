@@ -1,0 +1,13 @@
+# REQUERIMIENTOS FUNCIONALES INICIALES
+
+RF-01 El sistema debe permitir a los usuarios buscar recetas por nombre.
+
+RF-02 El sistema debe mostrar las recetas filtradas por texto de búsqueda.
+
+RF-03 El sistema debe permitir ver los detalles de las recetas.
+
+RF-04 El sistema debe permitir crear nuevas recetas.
+
+RF-05 El sistema debe permitir organizar las comidas en un planificador semanal.
+
+RF-06 El sistema debe permitir a los administradores visualizar las estadísticas de la plataforma.
