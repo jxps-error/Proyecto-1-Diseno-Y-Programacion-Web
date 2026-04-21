@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CookPlanner - Login</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .login-container {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #fef3f2 0%, #fee2e2 100%);
+      padding: 1rem;
+    }
+    
+    .login-box {
+      width: 100%;
+      max-width: 450px;
+    }
+    
+    .login-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    
+    .login-icon {
+      width: 64px;
+      height: 64px;
+      background-color: #f97316;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1rem;
+      font-size: 2.5rem;
+    }
+    
+    .login-header h1 {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+      color: #111827;
+    }
+    
+    .login-header p {
+      color: #6b7280;
+    }
+    
+    .input-group {
+      position: relative;
+      margin-bottom: 1rem;
+    }
+    
+    .input-icon {
+      position: absolute;
+      left: 0.75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #9ca3af;
+      font-size: 1rem;
+    }
+    
+    .input-with-icon {
+      padding-left: 2.5rem;
+    }
+    
+    .demo-info {
+      background-color: #dbeafe;
+      padding: 0.75rem;
+      border-radius: 0.5rem;
+      font-size: 0.875rem;
+      margin-bottom: 1rem;
+    }
+    
+    .demo-info p {
+      margin-bottom: 0.25rem;
+    }
+    
+    .demo-info strong {
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="login-box">
+      <div class="login-header">
+        <div class="login-icon">🧑‍🍳</div>
+        <h1>CookPlanner</h1>
+        <p>Planifica tus comidas, ahorra dinero</p>
+      </div>
+      
+      <div class="card">
+
+        <div class="tabs">
+          <button class="tab active" onclick="switchTab('login')">Iniciar Sesión</button>
+          <button class="tab" onclick="switchTab('register')">Registrarse</button>
+        </div>
+        
+
+        <div id="error-alert" class="alert alert-error hidden">
+          <span id="error-message"></span>
+        </div>
+        
+
+        <div id="login-form">
+          <div class="card-header">
+            <h2 class="card-title">Bienvenido de nuevo</h2>
+            <p class="card-description">Ingresa tus credenciales para continuar</p>
+          </div>
+          
+          <form onsubmit="handleLogin(event)">
+            <div class="input-group">
+              <label for="login-email">Email</label>
+              <span class="input-icon">✉️</span>
+              <input 
+                type="email" 
+                id="login-email" 
+                class="input-with-icon" 
+                placeholder="tu@email.com" 
+                required
+              >
+            </div>
+            
+            <div class="input-group">
+              <label for="login-password">Contraseña</label>
+              <span class="input-icon">🔒</span>
+              <input 
+                type="password" 
+                id="login-password" 
+                class="input-with-icon" 
+                placeholder="••••••••" 
+                required
+              >
+            </div>
+            
+            <div class="demo-info">
+              <p><strong>Cuentas de prueba:</strong></p>
+              <p>Usuario: user@cookplanner.com / user123</p>
+              <p>Chef: chef@cookplanner.com / chef123</p>
+              <p>Admin: admin@cookplanner.com / admin123</p>
+            </div>
+            
+            <button type="submit" class="btn btn-primary" style="width: 100%;">
+              Iniciar Sesión
+            </button>
+          </form>
+        </div>
+        
+
+        <div id="register-form" class="hidden">
+          <div class="card-header">
+            <h2 class="card-title">Crear cuenta</h2>
+            <p class="card-description">Regístrate para comenzar a planificar</p>
+          </div>
+          
+          <form onsubmit="handleRegister(event)">
+            <div class="input-group">
+              <label for="register-name">Nombre completo</label>
+              <span class="input-icon">👤</span>
+              <input 
+                type="text" 
+                id="register-name" 
+                class="input-with-icon" 
+                placeholder="Tu nombre" 
+                required
+              >
+            </div>
+            
+            <div class="input-group">
+              <label for="register-email">Email</label>
+              <span class="input-icon">✉️</span>
+              <input 
+                type="email" 
+                id="register-email" 
+                class="input-with-icon" 
+                placeholder="tu@email.com" 
+                required
+              >
+            </div>
+            
+            <div class="input-group">
+              <label for="register-password">Contraseña</label>
+              <span class="input-icon">🔒</span>
+              <input 
+                type="password" 
+                id="register-password" 
+                class="input-with-icon" 
+                placeholder="Mínimo 6 caracteres" 
+                minlength="6" 
+                required
+              >
+            </div>
+            
+            <button type="submit" class="btn btn-primary" style="width: 100%;">
+              Registrarse
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script src="data.js"></script>
+  <script>
+
+    function switchTab(tab) {
+      const tabs = document.querySelectorAll('.tab');
+      const loginForm = document.getElementById('login-form');
+      const registerForm = document.getElementById('register-form');
+      const errorAlert = document.getElementById('error-alert');
+      
+      tabs.forEach(t => t.classList.remove('active'));
+      errorAlert.classList.add('hidden');
+      
+      if (tab === 'login') {
+        tabs[0].classList.add('active');
+        loginForm.classList.remove('hidden');
+        registerForm.classList.add('hidden');
+      } else {
+        tabs[1].classList.add('active');
+        loginForm.classList.add('hidden');
+        registerForm.classList.remove('hidden');
+      }
+    }
+    
+
+    function showError(message) {
+      const errorAlert = document.getElementById('error-alert');
+      const errorMessage = document.getElementById('error-message');
+      errorMessage.textContent = message;
+      errorAlert.classList.remove('hidden');
+    }
+    
+
+    function handleLogin(event) {
+      event.preventDefault();
+      
+      const email = document.getElementById('login-email').value;
+      const password = document.getElementById('login-password').value;
+      
+      if (!email || !password) {
+        showError('Por favor completa todos los campos');
+        return;
+      }
+      
+      const success = login(email, password);
+      
+      if (success) {
+        window.location.href = 'home.html';
+      } else {
+        showError('Credenciales incorrectas');
+      }
+    }
+    
+
+    function handleRegister(event) {
+      event.preventDefault();
+      
+      const name = document.getElementById('register-name').value;
+      const email = document.getElementById('register-email').value;
+      const password = document.getElementById('register-password').value;
+      
+      if (!name || !email || !password) {
+        showError('Por favor completa todos los campos');
+        return;
+      }
+      
+      if (password.length < 6) {
+        showError('La contraseña debe tener al menos 6 caracteres');
+        return;
+      }
+      
+      const success = register(email, password, name);
+      
+      if (success) {
+        window.location.href = 'home.html';
+      } else {
+        showError('El email ya está registrado');
+      }
+    }
+    
+
+    if (getCurrentUser()) {
+      window.location.href = 'home.html';
+    }
+  </script>
+</body>
+</html>
