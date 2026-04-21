@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Planificador Semanal - CookPlanner</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .week-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    
+    .day-card {
+      background: white;
+      border-radius: 0.5rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      padding: 1rem;
+    }
+    
+    .day-card.today {
+      border: 2px solid #f97316;
+    }
+    
+    .day-header {
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .recipe-item {
+      background: #f9fafb;
+      padding: 0.5rem;
+      border-radius: 0.375rem;
+      margin-bottom: 0.5rem;
+      position: relative;
+    }
+    
+    .recipe-item:hover {
+      background: #f3f4f6;
+    }
+    
+    .recipe-item .remove-btn {
+      position: absolute;
+      top: 0.25rem;
+      right: 0.25rem;
+      background: none;
+      border: none;
+      color: #dc2626;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    
+    .recipe-item:hover .remove-btn {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="navbar-content">
+      <a href="home.html" class="navbar-brand">🧑‍🍳 CookPlanner</a>
+      <div class="navbar-links">
+        <a href="home.html">Inicio</a>
+        <a href="planner.html" class="active">Planificador</a>
+        <a href="#" id="role-link">Mi Panel</a>
+      </div>
+      <div class="navbar-user">
+        <span id="user-name"></span>
+        <button onclick="logout()" class="btn btn-secondary">Cerrar Sesión</button>
+      </div>
+    </div>
+  </nav>
+  
+  <div class="container">
+    <div class="flex-between mb-6">
+      <div>
+        <h1 class="text-3xl font-bold mb-2">Planificador Semanal</h1>
+        <p class="text-gray">Organiza tus comidas y calcula tu presupuesto automáticamente</p>
+      </div>
+      <div class="text-right">
+        <p class="text-sm text-gray">Presupuesto semanal</p>
+        <p class="text-3xl font-bold text-orange" id="total-budget">$0.00</p>
+      </div>
+    </div>
+    
+    <div id="week-grid" class="week-grid"></div>
+    
+    <div id="shopping-section" class="hidden">
+      <div class="grid grid-2">
+
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">🛒 Lista de Compras</h2>
+            <p class="card-description">Ingredientes consolidados para toda la semana</p>
+          </div>
+          
+          <div id="shopping-list" style="max-height: 400px; overflow-y: auto;"></div>
+          
+          <div class="flex-between" style="padding-top: 1rem; border-top: 2px solid #e5e7eb; margin-top: 1rem;">
+            <p class="font-bold text-lg">Total</p>
+            <p class="font-bold text-lg text-orange" id="shopping-total">$0.00</p>
+          </div>
+          
+          <button onclick="downloadShoppingList()" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">
+            💾 Descargar Lista
+          </button>
+        </div>
+        
+
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">💵 Resumen de Presupuesto</h2>
+          </div>
+          
+          <div class="mb-4">
+            <p class="text-sm text-gray mb-2">Presupuesto semanal</p>
+            <p class="text-3xl font-bold text-orange" id="budget-summary">$0.00</p>
+          </div>
+          
+          <div class="grid grid-2 mb-4" style="padding: 1rem; border: 1px solid #e5e7eb; border-radius: 0.5rem;">
+            <div>
+              <p class="text-sm text-gray">Promedio por día</p>
+              <p class="text-xl font-semibold" id="daily-average">$0.00</p>
+            </div>
+            <div>
+              <p class="text-sm text-gray">Total de recetas</p>
+              <p class="text-xl font-semibold" id="recipe-count">0</p>
+            </div>
+          </div>
+          
+          <div style="padding-top: 1rem; border-top: 1px solid #e5e7eb;">
+            <p class="text-sm text-gray mb-2">Días planificados</p>
+            <div id="days-progress" class="flex gap-1"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+
+  <div id="recipe-modal" class="modal">
+    <div class="modal-content" style="max-width: 800px;">
+      <div class="modal-header">
+        <h2 class="card-title">Selecciona una receta</h2>
+        <button class="modal-close" onclick="closeModal()">×</button>
+      </div>
+      
+      <p class="text-gray mb-4" id="modal-description"></p>
+      
+      <div id="modal-recipes" class="grid grid-2" style="max-height: 500px; overflow-y: auto;"></div>
+    </div>
+  </div>
+  
+  <script src="data.js"></script>
+  <script>
+    const user = requireAuth();
+    if (user) {
+      document.getElementById('user-name').textContent = user.name;
+      const roleLink = document.getElementById('role-link');
+      if (user.role === 'chef') {
+        roleLink.textContent = 'Panel de Chef';
+        roleLink.href = 'chef-dashboard.html';
+      } else if (user.role === 'admin') {
+        roleLink.textContent = 'Panel Admin';
+        roleLink.href = 'admin-dashboard.html';
+      } else {
+        roleLink.style.display = 'none';
+      }
+    }
+    
+    let recipes = [];
+    let planner = [];
+    let selectedDate = null;
+    
+    const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+    const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    
+    function loadData() {
+      recipes = getRecipes();
+      planner = getPlanner();
+      renderWeek();
+      updateBudget();
+    }
+    
+    function getWeekDays() {
+      const today = new Date();
+      const day = today.getDay();
+      const diff = today.getDate() - day + (day === 0 ? -6 : 1); // Lunes
+      const monday = new Date(today.setDate(diff));
+      
+      const days = [];
+      for (let i = 0; i < 7; i++) {
+        const date = new Date(monday);
+        date.setDate(monday.getDate() + i);
+        days.push(date);
+      }
+      return days;
+    }
+    
+    function formatDate(date) {
+      return date.toISOString().split('T')[0];
+    }
+    
+    function renderWeek() {
+      const weekDays = getWeekDays();
+      const today = formatDate(new Date());
+      const grid = document.getElementById('week-grid');
+      
+      grid.innerHTML = weekDays.map(date => {
+        const dateStr = formatDate(date);
+        const isToday = dateStr === today;
+        const dayRecipes = getRecipesForDay(dateStr);
+        const dayCost = dayRecipes.reduce((sum, r) => sum + r.totalCost, 0);
+        
+        return `
+          <div class="day-card ${isToday ? 'today' : ''}">
+            <div class="day-header">
+              <p class="font-semibold">${dayNames[date.getDay()]}</p>
+              <p class="text-sm text-gray">${date.getDate()} ${monthNames[date.getMonth()]}</p>
+              ${isToday ? '<span class="badge badge-primary">Hoy</span>' : ''}
+            </div>
+            
+            <div style="min-height: 150px;">
+              ${dayRecipes.map(recipe => `
+                <div class="recipe-item">
+                  <a href="recipe-detail.html?id=${recipe.id}" style="text-decoration: none; color: inherit;">
+                    <p class="text-sm font-semibold" style="margin-bottom: 0.25rem;">${recipe.title}</p>
+                    <p class="text-sm text-gray">$${recipe.totalCost.toFixed(2)}</p>
+                  </a>
+                  <button class="remove-btn" onclick="removeRecipeFromDay('${dateStr}', '${recipe.id}')">🗑️</button>
+                </div>
+              `).join('')}
+            </div>
+            
+            <button onclick="openModal('${dateStr}')" class="btn btn-outline" style="width: 100%; margin-top: 0.5rem;">
+              ➕ Agregar receta
+            </button>
+            
+            ${dayRecipes.length > 0 ? `
+              <div style="padding-top: 0.75rem; margin-top: 0.75rem; border-top: 1px solid #e5e7eb;">
+                <p class="text-sm text-gray">Total del día:</p>
+                <p class="font-bold text-orange">$${dayCost.toFixed(2)}</p>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }).join('');
+    }
+    
+    function getRecipesForDay(date) {
+      const day = planner.find(d => d.date === date);
+      if (!day) return [];
+      return day.recipes.map(id => recipes.find(r => r.id === id)).filter(Boolean);
+    }
+    
+    function updateBudget() {
+      const weekRecipes = planner.flatMap(day => 
+        day.recipes.map(id => recipes.find(r => r.id === id)).filter(Boolean)
+      );
+      
+      const total = weekRecipes.reduce((sum, r) => sum + r.totalCost, 0);
+      
+      document.getElementById('total-budget').textContent = `$${total.toFixed(2)}`;
+      document.getElementById('budget-summary').textContent = `$${total.toFixed(2)}`;
+      document.getElementById('daily-average').textContent = `$${(total / 7).toFixed(2)}`;
+      document.getElementById('recipe-count').textContent = weekRecipes.length;
+      
+
+      if (weekRecipes.length > 0) {
+        document.getElementById('shopping-section').classList.remove('hidden');
+        generateShoppingList();
+        renderDaysProgress();
+      } else {
+        document.getElementById('shopping-section').classList.add('hidden');
+      }
+    }
+    
+    function generateShoppingList() {
+      const ingredientsMap = new Map();
+      
+      planner.forEach(day => {
+        day.recipes.forEach(recipeId => {
+          const recipe = recipes.find(r => r.id === recipeId);
+          if (recipe) {
+            recipe.ingredients.forEach(ing => {
+              if (ingredientsMap.has(ing.name)) {
+                const existing = ingredientsMap.get(ing.name);
+                ingredientsMap.set(ing.name, {
+                  quantity: existing.quantity,
+                  price: existing.price + ing.price,
+                  count: existing.count + 1
+                });
+              } else {
+                ingredientsMap.set(ing.name, {
+                  quantity: ing.quantity,
+                  price: ing.price,
+                  count: 1
+                });
+              }
+            });
+          }
+        });
+      });
+      
+      const shoppingList = Array.from(ingredientsMap.entries());
+      const total = shoppingList.reduce((sum, [_, data]) => sum + data.price, 0);
+      
+      document.getElementById('shopping-list').innerHTML = shoppingList.map(([name, data]) => `
+        <div class="flex-between" style="padding: 0.75rem; border-bottom: 1px solid #e5e7eb;">
+          <div>
+            <p class="font-semibold">${name}</p>
+            <p class="text-sm text-gray">${data.count > 1 ? `${data.quantity} (x${data.count})` : data.quantity}</p>
+          </div>
+          <p class="font-semibold text-orange">$${data.price.toFixed(2)}</p>
+        </div>
+      `).join('');
+      
+      document.getElementById('shopping-total').textContent = `$${total.toFixed(2)}`;
+    }
+    
+    function renderDaysProgress() {
+      const weekDays = getWeekDays();
+      const progress = document.getElementById('days-progress');
+      
+      progress.innerHTML = weekDays.map(date => {
+        const dateStr = formatDate(date);
+        const hasRecipes = planner.some(d => d.date === dateStr && d.recipes.length > 0);
+        return `
+          <div 
+            style="flex: 1; height: 8px; border-radius: 4px; background-color: ${hasRecipes ? '#f97316' : '#e5e7eb'};" 
+            title="${dayNames[date.getDay()]}"
+          ></div>
+        `;
+      }).join('');
+    }
+    
+    function openModal(date) {
+      selectedDate = date;
+      const dateObj = new Date(date + 'T00:00:00');
+      document.getElementById('modal-description').textContent = 
+        `Agregar al ${dayNames[dateObj.getDay()]} ${dateObj.getDate()} de ${monthNames[dateObj.getMonth()]}`;
+      
+      const modalRecipes = document.getElementById('modal-recipes');
+      modalRecipes.innerHTML = recipes.map(recipe => `
+        <div class="recipe-card" onclick="addRecipeToDay('${recipe.id}')" style="cursor: pointer;">
+          <img src="${recipe.image}" alt="${recipe.title}">
+          <div class="recipe-card-content">
+            <h3 class="recipe-card-title">${recipe.title}</h3>
+            <div class="flex-between text-sm">
+              <span class="text-gray">${recipe.prepTime} min</span>
+              <span class="font-semibold text-orange">$${recipe.totalCost.toFixed(2)}</span>
+            </div>
+          </div>
+        </div>
+      `).join('');
+      
+      document.getElementById('recipe-modal').classList.add('active');
+    }
+    
+    function closeModal() {
+      document.getElementById('recipe-modal').classList.remove('active');
+      selectedDate = null;
+    }
+    
+    function addRecipeToDay(recipeId) {
+      if (selectedDate) {
+        addToPlanner(selectedDate, recipeId);
+        closeModal();
+        loadData();
+      }
+    }
+    
+    function removeRecipeFromDay(date, recipeId) {
+      removeFromPlanner(date, recipeId);
+      loadData();
+    }
+    
+    function downloadShoppingList() {
+      const ingredientsMap = new Map();
+      let total = 0;
+      
+      planner.forEach(day => {
+        day.recipes.forEach(recipeId => {
+          const recipe = recipes.find(r => r.id === recipeId);
+          if (recipe) {
+            recipe.ingredients.forEach(ing => {
+              if (ingredientsMap.has(ing.name)) {
+                const existing = ingredientsMap.get(ing.name);
+                ingredientsMap.set(ing.name, {
+                  quantity: existing.quantity,
+                  price: existing.price + ing.price,
+                  count: existing.count + 1
+                });
+              } else {
+                ingredientsMap.set(ing.name, {
+                  quantity: ing.quantity,
+                  price: ing.price,
+                  count: 1
+                });
+              }
+              total += ing.price;
+            });
+          }
+        });
+      });
+      
+      let text = 'LISTA DE COMPRAS - CookPlanner\n\n';
+      ingredientsMap.forEach((data, name) => {
+        const qty = data.count > 1 ? `${data.quantity} (x${data.count})` : data.quantity;
+        text += `• ${name} - ${qty} - $${data.price.toFixed(2)}\n`;
+      });
+      text += `\nTOTAL: $${total.toFixed(2)}`;
+      
+      const blob = new Blob([text], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'lista-de-compras.txt';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+    
+    loadData();
+  </script>
+</body>
+</html>
