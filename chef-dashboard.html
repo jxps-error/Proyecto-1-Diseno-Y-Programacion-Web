@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel de Chef - CookPlanner</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="navbar-content">
+      <a href="home.html" class="navbar-brand">🧑‍🍳 CookPlanner</a>
+      <div class="navbar-links">
+        <a href="home.html">Inicio</a>
+        <a href="planner.html">Planificador</a>
+        <a href="chef-dashboard.html" class="active">Panel de Chef</a>
+      </div>
+      <div class="navbar-user">
+        <span id="user-name"></span>
+        <button onclick="logout()" class="btn btn-secondary">Cerrar Sesión</button>
+      </div>
+    </div>
+  </nav>
+  
+  <div class="container">
+    <div class="flex-between mb-6">
+      <div>
+        <h1 class="text-3xl font-bold mb-2">Panel de Chef</h1>
+        <p class="text-gray">Crea y gestiona tus recetas</p>
+      </div>
+      <button id="new-recipe-btn" onclick="showForm()" class="btn btn-primary">
+        ➕ Nueva Receta
+      </button>
+    </div>
+    
+
+    <div class="grid grid-3 mb-6">
+      <div class="card">
+        <div class="flex-between">
+          <div>
+            <p class="text-sm text-gray">Mis Recetas</p>
+            <p class="text-3xl font-bold" id="total-recipes">0</p>
+          </div>
+          <div style="font-size: 2.5rem;">🧑‍🍳</div>
+        </div>
+      </div>
+      
+      <div class="card">
+        <div class="flex-between">
+          <div>
+            <p class="text-sm text-gray">Calificación Promedio</p>
+            <p class="text-3xl font-bold" id="avg-rating">0.0</p>
+          </div>
+          <div style="font-size: 2.5rem;">⭐</div>
+        </div>
+      </div>
+      
+      <div class="card">
+        <div class="flex-between">
+          <div>
+            <p class="text-sm text-gray">Total Reseñas</p>
+            <p class="text-3xl font-bold" id="total-reviews">0</p>
+          </div>
+          <div style="font-size: 2.5rem;">💬</div>
+        </div>
+      </div>
+    </div>
+    
+
+    <div id="recipe-form" class="card hidden">
+      <div class="card-header">
+        <h2 class="card-title" id="form-title">Crear Nueva Receta</h2>
+        <p class="card-description">Completa la información y el costo se calculará automáticamente</p>
+      </div>
+      
+      <form onsubmit="handleSubmit(event)">
+        <div class="grid grid-2 mb-4">
+          <div class="form-group">
+            <label for="title">Título *</label>
+            <input type="text" id="title" placeholder="Nombre de la receta" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="category">Categoría *</label>
+            <select id="category" required>
+              <option value="">Selecciona una categoría</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="difficulty">Dificultad</label>
+            <select id="difficulty">
+              <option value="easy">Fácil</option>
+              <option value="medium" selected>Medio</option>
+              <option value="hard">Difícil</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="prepTime">Tiempo de preparación (min)</label>
+            <input type="number" id="prepTime" value="30" min="1">
+          </div>
+          
+          <div class="form-group">
+            <label for="servings">Porciones</label>
+            <input type="number" id="servings" value="4" min="1">
+          </div>
+          
+          <div class="form-group">
+            <label for="image">URL de imagen</label>
+            <input type="url" id="image" placeholder="https://...">
+          </div>
+        </div>
+        
+        <div class="form-group mb-4">
+          <label for="description">Descripción *</label>
+          <textarea id="description" placeholder="Breve descripción de la receta" rows="2" required></textarea>
+        </div>
+        
+        <div class="form-group mb-4">
+          <label for="tags">Etiquetas (separadas por comas)</label>
+          <input type="text" id="tags" placeholder="vegetariana, rápida, saludable">
+        </div>
+        
+        <hr class="mb-4">
+        
+
+        <div class="mb-4">
+          <div class="flex-between mb-2">
+            <label>Ingredientes *</label>
+            <button type="button" onclick="addIngredient()" class="btn btn-outline btn-sm">
+              ➕ Agregar ingrediente
+            </button>
+          </div>
+          
+          <div id="ingredients-list"></div>
+          
+          <div class="alert alert-info mt-4">
+            Costo total calculado: <strong class="text-orange" id="total-cost">$0.00</strong> 
+            | Costo por porción: <strong id="cost-per-serving">$0.00</strong>
+          </div>
+        </div>
+        
+        <hr class="mb-4">
+        
+
+        <div class="form-group mb-4">
+          <label for="instructions">Instrucciones * (una por línea)</label>
+          <textarea id="instructions" placeholder="1. Primer paso&#10;2. Segundo paso&#10;3. Tercer paso" rows="6" required></textarea>
+        </div>
+        
+
+        <div class="flex gap-2">
+          <button type="submit" class="btn btn-primary">
+            💾 <span id="submit-text">Crear Receta</span>
+          </button>
+          <button type="button" onclick="cancelForm()" class="btn btn-outline">
+            ❌ Cancelar
+          </button>
+        </div>
+      </form>
+    </div>
+    
+
+    <div id="recipes-list" class="card">
+      <div class="card-header">
+        <h2 class="card-title">Mis Recetas</h2>
+        <p class="card-description">Gestiona todas tus recetas publicadas</p>
+      </div>
+      
+      <div id="my-recipes"></div>
+    </div>
+  </div>
+  
+  <script src="data.js"></script>
+  <script>
+    const user = requireAuth();
+    if (!user || user.role !== 'chef') {
+      alert('Solo los chefs pueden acceder a esta página');
+      window.location.href = 'home.html';
+    }
+    
+    document.getElementById('user-name').textContent = user.name;
+    
+    let recipes = [];
+    let categories = [];
+    let editingId = null;
+    let ingredientsData = [{ name: '', quantity: '', price: 0 }];
+    
+    function loadData() {
+      recipes = getRecipes();
+      categories = getCategories();
+      
+
+      const categorySelect = document.getElementById('category');
+      categorySelect.innerHTML = '<option value="">Selecciona una categoría</option>' +
+        categories.map(cat => `<option value="${cat.name}">${cat.icon} ${cat.name}</option>`).join('');
+      
+      updateStats();
+      renderRecipesList();
+    }
+    
+    function updateStats() {
+      const myRecipes = recipes.filter(r => r.chefId === user.id);
+      const totalRating = myRecipes.reduce((sum, r) => sum + r.rating, 0);
+      const avgRating = myRecipes.length > 0 ? (totalRating / myRecipes.length).toFixed(1) : '0.0';
+      const totalReviews = myRecipes.reduce((sum, r) => sum + r.reviews.length, 0);
+      
+      document.getElementById('total-recipes').textContent = myRecipes.length;
+      document.getElementById('avg-rating').textContent = avgRating;
+      document.getElementById('total-reviews').textContent = totalReviews;
+    }
+    
+    function renderRecipesList() {
+      const myRecipes = recipes.filter(r => r.chefId === user.id);
+      const container = document.getElementById('my-recipes');
+      
+      if (myRecipes.length === 0) {
+        container.innerHTML = `
+          <div class="text-center" style="padding: 3rem;">
+            <div style="font-size: 4rem; margin-bottom: 1rem;">🧑‍🍳</div>
+            <h3 class="text-xl font-semibold mb-2">No tienes recetas aún</h3>
+            <p class="text-gray mb-4">Crea tu primera receta para comenzar</p>
+            <button onclick="showForm()" class="btn btn-primary">➕ Crear Receta</button>
+          </div>
+        `;
+      } else {
+        container.innerHTML = myRecipes.map(recipe => `
+          <div class="flex gap-4 mb-4" style="padding: 1rem; border: 1px solid #e5e7eb; border-radius: 0.5rem;">
+            <img src="${recipe.image}" alt="${recipe.title}" style="width: 100px; height: 100px; object-fit: cover; border-radius: 0.5rem;">
+            
+            <div style="flex: 1;">
+              <h3 class="font-semibold text-lg mb-1">${recipe.title}</h3>
+              <p class="text-sm text-gray mb-2">${recipe.description}</p>
+              <div class="flex gap-2 mb-2">
+                <span class="badge">${recipe.category}</span>
+                <span class="badge">⭐ ${recipe.rating.toFixed(1)}</span>
+                <span class="badge">💬 ${recipe.reviews.length}</span>
+              </div>
+              <div class="flex gap-4 text-sm text-gray">
+                <span>🕒 ${recipe.prepTime} min</span>
+                <span>💵 $${recipe.totalCost.toFixed(2)}</span>
+              </div>
+            </div>
+            
+            <div class="flex flex-col gap-2">
+              <button onclick="editRecipe('${recipe.id}')" class="btn btn-outline btn-sm">
+                ✏️ Editar
+              </button>
+              <button onclick="deleteRecipeConfirm('${recipe.id}')" class="btn btn-outline btn-sm" style="color: #dc2626;">
+                🗑️ Eliminar
+              </button>
+            </div>
+          </div>
+        `).join('');
+      }
+    }
+    
+    function showForm() {
+      document.getElementById('recipe-form').classList.remove('hidden');
+      document.getElementById('recipes-list').classList.add('hidden');
+      document.getElementById('new-recipe-btn').classList.add('hidden');
+      renderIngredients();
+    }
+    
+    function cancelForm() {
+      document.getElementById('recipe-form').classList.add('hidden');
+      document.getElementById('recipes-list').classList.remove('hidden');
+      document.getElementById('new-recipe-btn').classList.remove('hidden');
+      resetForm();
+    }
+    
+    function resetForm() {
+      editingId = null;
+      ingredientsData = [{ name: '', quantity: '', price: 0 }];
+      document.getElementById('form-title').textContent = 'Crear Nueva Receta';
+      document.getElementById('submit-text').textContent = 'Crear Receta';
+      document.querySelector('form').reset();
+      renderIngredients();
+    }
+    
+    function addIngredient() {
+      ingredientsData.push({ name: '', quantity: '', price: 0 });
+      renderIngredients();
+    }
+    
+    function removeIngredient(index) {
+      if (ingredientsData.length > 1) {
+        ingredientsData.splice(index, 1);
+        renderIngredients();
+      }
+    }
+    
+    function updateIngredient(index, field, value) {
+      ingredientsData[index][field] = field === 'price' ? parseFloat(value) || 0 : value;
+      calculateTotalCost();
+    }
+    
+    function renderIngredients() {
+      const container = document.getElementById('ingredients-list');
+      container.innerHTML = ingredientsData.map((ing, idx) => `
+        <div class="grid" style="grid-template-columns: 2fr 1fr 1fr auto; gap: 0.5rem; margin-bottom: 0.5rem;">
+          <input 
+            type="text" 
+            placeholder="Ej: Tomate" 
+            value="${ing.name}" 
+            onchange="updateIngredient(${idx}, 'name', this.value)"
+          >
+          <input 
+            type="text" 
+            placeholder="Ej: 200g" 
+            value="${ing.quantity}" 
+            onchange="updateIngredient(${idx}, 'quantity', this.value)"
+          >
+          <input 
+            type="number" 
+            step="0.01" 
+            placeholder="0.00" 
+            value="${ing.price}" 
+            onchange="updateIngredient(${idx}, 'price', this.value)"
+          >
+          <button 
+            type="button" 
+            onclick="removeIngredient(${idx})" 
+            class="btn btn-outline" 
+            ${ingredientsData.length === 1 ? 'disabled' : ''}
+          >
+            🗑️
+          </button>
+        </div>
+      `).join('');
+      
+      calculateTotalCost();
+    }
+    
+    function calculateTotalCost() {
+      const total = ingredientsData.reduce((sum, ing) => sum + (ing.price || 0), 0);
+      const servings = parseInt(document.getElementById('servings').value) || 1;
+      
+      document.getElementById('total-cost').textContent = `$${total.toFixed(2)}`;
+      document.getElementById('cost-per-serving').textContent = `$${(total / servings).toFixed(2)}`;
+    }
+    
+    function handleSubmit(event) {
+      event.preventDefault();
+      
+
+      if (ingredientsData.some(ing => !ing.name || !ing.quantity)) {
+        alert('Por favor completa todos los ingredientes');
+        return;
+      }
+      
+      const totalCost = ingredientsData.reduce((sum, ing) => sum + (ing.price || 0), 0);
+      const instructions = document.getElementById('instructions').value
+        .split('\n')
+        .filter(line => line.trim());
+      const tags = document.getElementById('tags').value
+        .split(',')
+        .map(tag => tag.trim())
+        .filter(tag => tag);
+      
+      const recipeData = {
+        title: document.getElementById('title').value,
+        description: document.getElementById('description').value,
+        image: document.getElementById('image').value || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800',
+        chefId: user.id,
+        chefName: user.name,
+        category: document.getElementById('category').value,
+        difficulty: document.getElementById('difficulty').value,
+        prepTime: parseInt(document.getElementById('prepTime').value),
+        servings: parseInt(document.getElementById('servings').value),
+        tags: tags,
+        instructions: instructions,
+        ingredients: ingredientsData,
+        totalCost: totalCost,
+      };
+      
+      if (editingId) {
+        updateRecipe(editingId, recipeData);
+      } else {
+        addRecipe(recipeData);
+      }
+      
+      cancelForm();
+      loadData();
+    }
+    
+    function editRecipe(id) {
+      const recipe = recipes.find(r => r.id === id);
+      if (!recipe) return;
+      
+      editingId = id;
+      
+      document.getElementById('form-title').textContent = 'Editar Receta';
+      document.getElementById('submit-text').textContent = 'Guardar Cambios';
+      document.getElementById('title').value = recipe.title;
+      document.getElementById('description').value = recipe.description;
+      document.getElementById('image').value = recipe.image;
+      document.getElementById('category').value = recipe.category;
+      document.getElementById('difficulty').value = recipe.difficulty;
+      document.getElementById('prepTime').value = recipe.prepTime;
+      document.getElementById('servings').value = recipe.servings;
+      document.getElementById('tags').value = recipe.tags.join(', ');
+      document.getElementById('instructions').value = recipe.instructions.join('\n');
+      
+      ingredientsData = recipe.ingredients;
+      
+      showForm();
+    }
+    
+    function deleteRecipeConfirm(id) {
+      if (confirm('¿Estás seguro de que quieres eliminar esta receta?')) {
+        deleteRecipe(id);
+        loadData();
+      }
+    }
+    
+    loadData();
+  </script>
+</body>
+</html>
