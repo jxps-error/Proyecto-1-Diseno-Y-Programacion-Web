@@ -1,180 +1,246 @@
-# CookPlanner - Plataforma de Gestión Culinaria
+# 🧑‍🍳 CookPlanner - Versión HTML/CSS/JavaScript
 
-## Descripción del Proyecto
+Plataforma web para planificar comidas, descubrir recetas y gestionar presupuestos.
 
-CookPlanner es una plataforma digital colaborativa orientada a la gestión y descubrimiento de recetas culinarias. El sistema permite a distintos tipos de usuarios crear, buscar, personalizar y planificar recetas, facilitando la organización de comidas según presupuesto, preferencias dietéticas e ingredientes disponibles.
+## 📁 Archivos Incluidos
 
-El proyecto se desarrolla como parte del curso SOFT-06 Diseño y Programación Web de la Universidad CENFOTEC, aplicando tecnologías frontend (HTML, CSS y JavaScript) bajo un enfoque iterativo basado en retroalimentación simulada del cliente.
+- **index.html** - Página de login y registro
+- **home.html** - Página principal con buscador y filtros
+- **recipe-detail.html** - Detalle de receta con ingredientes, costos y reseñas
+- **planner.html** - Planificador semanal con lista de compras
+- **chef-dashboard.html** - Panel para que los chefs creen y gestionen recetas
+- **admin-dashboard.html** - Panel de administración con métricas y gestión de categorías
+- **data.js** - Funciones de datos y autenticación (localStorage)
+- **styles.css** - Estilos globales de la aplicación
+- **README.md** - Este archivo
 
-La plataforma integra funcionalidades sociales, planificación de menús y control presupuestario, ofreciendo una experiencia interactiva, estructurada y accesible para la comunidad culinaria.
+## 🚀 Cómo Usar
+
+### Opción 1: Abrir directamente en el navegador
+
+1. Descarga todos los archivos en la misma carpeta
+2. Abre `index.html` en tu navegador web
+3. Usa las cuentas de prueba para iniciar sesión
+
+### Opción 2: Servidor local (recomendado)
+
+Si tienes Python instalado:
+
+```bash
+# Python 3
+python -m http.server 8000
+
+# Python 2
+python -m SimpleHTTPServer 8000
+```
+
+Si tienes Node.js instalado:
+
+```bash
+# Instalar http-server (solo una vez)
+npm install -g http-server
+
+# Ejecutar servidor
+http-server
+```
+
+Luego abre http://localhost:8000 en tu navegador.
+
+## 👥 Cuentas de Prueba
+
+### Usuario Normal
+- Email: user@cookplanner.com
+- Contraseña: user123
+- Permisos: Ver recetas, agregar a favoritos, planificar comidas
+
+### Chef
+- Email: chef@cookplanner.com
+- Contraseña: chef123
+- Permisos: Todo lo de usuario + crear/editar/eliminar recetas
+
+### Administrador
+- Email: admin@cookplanner.com
+- Contraseña: admin123
+- Permisos: Todo lo anterior + gestión de categorías, métricas del sistema
+
+## 📱 Funcionalidades por Pantalla
+
+### 1. Login/Registro (index.html)
+- Iniciar sesión con email y contraseña
+- Registrarse como nuevo usuario
+- Validación de formularios
+- Cuentas de prueba pre-configuradas
+
+### 2. Página Principal (home.html)
+- Búsqueda de recetas por nombre, ingredientes o etiquetas
+- Filtros avanzados:
+  - Por categoría (Pasta, Ensaladas, Mexicana, etc.)
+  - Por dificultad (Fácil, Medio, Difícil)
+  - Por presupuesto máximo (slider de $5 a $100)
+- Categorías populares con contador de recetas
+- Grid de recetas con imagen, rating, costo y tiempo
+
+### 3. Detalle de Receta (recipe-detail.html)
+- Información completa de la receta
+- Lista de ingredientes con precios individuales
+- Costo total y costo por porción
+- Instrucciones paso a paso
+- Sistema de favoritos
+- Agregar al planificador semanal
+- Sistema de reseñas y calificaciones (5 estrellas)
+- Visualización de todas las reseñas
+
+### 4. Planificador Semanal (planner.html)
+- Calendario de 7 días (Lunes a Domingo)
+- Agregar/eliminar recetas por día
+- Cálculo automático de presupuesto semanal
+- Lista de compras consolidada:
+  - Ingredientes agrupados
+  - Cantidades totales
+  - Precios totales
+- Descargar lista de compras en .txt
+- Resumen de presupuesto:
+  - Total semanal
+  - Promedio por día
+  - Total de recetas planificadas
+  - Visualización de días planificados
+
+### 5. Panel de Chef (chef-dashboard.html)
+**Solo accesible para usuarios con rol "chef"**
+
+- Estadísticas personales:
+  - Total de recetas creadas
+  - Calificación promedio
+  - Total de reseñas recibidas
+- Crear nuevas recetas con:
+  - Información básica (título, categoría, dificultad, etc.)
+  - Lista de ingredientes con precios
+  - Cálculo automático de costo total y por porción
+  - Instrucciones paso a paso
+  - Etiquetas personalizadas
+- Editar recetas existentes
+- Eliminar recetas
+- Vista de todas las recetas creadas
+
+### 6. Panel de Administración (admin-dashboard.html)
+**Solo accesible para usuarios con rol "admin"**
+
+- Métricas del sistema:
+  - Total de recetas
+  - Chefs activos
+  - Total de reseñas
+  - Rating promedio
+- Gráficos y estadísticas:
+  - Recetas por categoría (gráfico de barras)
+  - Top 5 recetas mejor calificadas
+  - Distribución por dificultad
+  - Distribución de presupuestos
+- Gestión de categorías:
+  - Crear nuevas categorías con nombre e icono
+  - Editar categorías existentes
+  - Eliminar categorías (las recetas se mantienen)
+- Moderación:
+  - Lista de todas las recetas con su estado
+  - Reseñas recientes del sistema
+  - Información de chefs por receta
+
+## 💾 Almacenamiento de Datos
+
+La aplicación usa **localStorage** del navegador para guardar:
+
+- Usuario autenticado actual
+- Recetas creadas
+- Categorías personalizadas
+- Favoritos del usuario
+- Planificador semanal
+- Reseñas y calificaciones
+
+**Nota:** Los datos se almacenan en tu navegador localmente. Si borras el caché o localStorage, perderás los datos personalizados (pero no los datos mock iniciales).
+
+## 🎨 Personalización
+
+### Cambiar colores principales
+Edita `styles.css` y busca:
+- `#f97316` (naranja principal)
+- `#dc2626` (rojo)
+- Reemplaza con tus colores preferidos
+
+### Agregar más recetas mock
+Edita `data.js` y agrega objetos al array `mockRecipes`
+
+### Agregar más categorías
+Edita `data.js` y agrega objetos al array `mockCategories`
+
+## 🔧 Estructura del Código
+
+### data.js
+- `mockUsers`: Usuarios de prueba
+- `mockRecipes`: Recetas iniciales
+- `mockCategories`: Categorías iniciales
+- Funciones de autenticación (`login`, `register`, `logout`)
+- Funciones de gestión de datos (`getRecipes`, `addRecipe`, etc.)
+- Funciones de localStorage para persistencia
+
+### styles.css
+- Reset y estilos base
+- Sistema de navbar
+- Sistema de cards
+- Sistema de formularios
+- Sistema de botones
+- Sistema de grid responsive
+- Badges, alerts, tabs, modales
+- Tablas y utilidades
+- Media queries para responsive
+
+### Cada archivo HTML
+- Estructura semántica HTML5
+- Navbar con navegación
+- JavaScript inline para funcionalidad específica
+- Llamadas a funciones de `data.js`
+- Manejo de eventos del DOM
+- Renderizado dinámico con template strings
+
+## 📝 Notas Importantes
+
+1. **Compatibilidad:** Funciona en todos los navegadores modernos (Chrome, Firefox, Safari, Edge)
+
+2. **Responsive:** Diseño adaptable a móviles, tablets y escritorio
+
+3. **Sin dependencias:** No requiere librerías externas (jQuery, React, etc.)
+
+4. **Nivel:** Código principiante-intermedio con comentarios claros
+
+5. **Seguridad:** Este es un proyecto de demostración. NO usar passwords reales o datos sensibles.
+
+## 🐛 Solución de Problemas
+
+**Las imágenes no cargan:**
+- Las imágenes usan URLs de Unsplash. Requiere conexión a internet.
+
+**Los datos se pierden al recargar:**
+- Verifica que tu navegador permita localStorage
+- No uses modo incógnito/privado
+
+**No puedo crear recetas como Usuario:**
+- Debes iniciar sesión como Chef o crear una cuenta nueva y modificar el rol en `data.js`
+
+**Error al abrir archivos:**
+- Asegúrate de que todos los archivos estén en la misma carpeta
+- Usa un servidor local en lugar de file://
+
+## 📚 Recursos de Aprendizaje
+
+Si quieres aprender más sobre las tecnologías usadas:
+
+- **HTML:** https://developer.mozilla.org/es/docs/Web/HTML
+- **CSS:** https://developer.mozilla.org/es/docs/Web/CSS
+- **JavaScript:** https://developer.mozilla.org/es/docs/Web/JavaScript
+- **localStorage:** https://developer.mozilla.org/es/docs/Web/API/Window/localStorage
+
+## 📄 Licencia
+
+Este proyecto es de código abierto y puede ser usado libremente para aprendizaje y proyectos personales.
 
 ---
 
-## Alcance del Proyecto
-
-El sistema incluirá:
-
-- Registro e inicio de sesión de usuarios.
-- Creación y gestión de recetas con cálculo automático de presupuesto.
-- Búsqueda avanzada por nombre, ingredientes y presupuesto.
-- Sistema de favoritos, calificaciones y comentarios.
-- Planificador semanal con cálculo automático de costos.
-- Generación automática de lista de compras.
-- Control de roles (Chef, Usuario Regular, Administrador).
-- Cumplimiento de accesibilidad WCAG 2.1 nivel AA.
-
----
-
-## Tipos de Usuario
-
-### Chef / Experto Culinario
-- Crea y gestiona recetas.
-- Edita contenido propio.
-- Participa en la comunidad culinaria.
-
-### Usuario Regular
-- Busca recetas.
-- Guarda recetas en favoritos.
-- Califica y comenta.
-- Planifica menús semanales.
-
-### Administrador del Sistema
-- Gestiona categorías.
-- Modera contenido.
-- Supervisa el correcto funcionamiento del sistema.
-
----
-
-## Tecnologías Utilizadas
-
-- HTML5
-- CSS3
-- JavaScript
-- Git
-- GitHub
-
----
-
-## Estrategia de Ramas (Branches)
-
-- `main` → versión estable del proyecto.
-- `develop` → integración de funcionalidades.
-- `feature/nombre-funcionalidad` → desarrollo de nuevas características.
-- `fix/nombre-error` → corrección de errores.
-
----
-
-## Convención de Commits
-
-Se utilizará la siguiente estructura:
-
-- `new:` Nueva funcionalidad
-- `fixed:` Corrección de errores
-- `style:` Cambios visuales o de formato
-- `docs:` Cambios en documentación
-- `refactor:` Mejora de código sin cambiar funcionalidad
-- `test:` Pruebas
-
-Ejemplos:
-- new: agregar buscador por ingredientes
-- fixed: corregir cálculo de presupuesto
-- style: mejorar diseño del dashboard
-- docs: actualizar README
-
----
-
-# Requerimientos Funcionales
-
-## Gestión de Usuarios
-
-**RF-01:** El sistema debe permitir el registro de usuarios capturando obligatoriamente:
-- Nombre completo (mínimo 3 caracteres).
-- Correo electrónico en formato válido y único.
-- Contraseña con mínimo 8 caracteres, incluyendo al menos una letra y un número.
-
-**RF-02:** El sistema debe validar que el correo electrónico y la contraseña coincidan exactamente con los registros almacenados para permitir el acceso.
-
-**RF-03:** El sistema debe mostrar un mensaje de error genérico cuando las credenciales no coincidan con los registros almacenados.
-
----
-
-## Gestión de Recetas
-
-**RF-04:** El sistema debe permitir al Chef crear una receta registrando:
-- Nombre de la receta.
-- Lista de ingredientes (mínimo 1).
-- Cantidad por ingrediente.
-- Costo estimado por ingrediente.
-- Tipo de receta.
-- Nivel de dificultad (Fácil, Intermedio o Avanzado).
-- Instrucciones paso a paso (mínimo 1 paso).
-
-**RF-05:** El sistema debe calcular automáticamente el costo total de la receta sumando los costos individuales de los ingredientes ingresados.
-
-**RF-06:** El sistema debe permitir modificar los datos de una receta previamente registrada por su autor.
-
----
-
-## Búsqueda y Filtrado
-
-**RF-07:** El sistema debe permitir buscar recetas por coincidencia parcial o exacta del nombre.
-
-**RF-08:** El sistema debe permitir ingresar una lista de ingredientes disponibles y mostrar recetas que contengan al menos uno de los ingredientes ingresados.
-
-**RF-09:** El sistema debe permitir filtrar recetas cuyo costo total sea menor o igual al presupuesto ingresado.
-
----
-
-## Interacción del Usuario
-
-**RF-10:** El sistema debe permitir a un usuario autenticado guardar recetas en su lista de favoritos.
-
-**RF-11:** El sistema debe permitir calificar recetas con valores enteros entre 1 y 5.
-
-**RF-12:** El sistema debe permitir publicar comentarios asociados a una receta.
-
----
-
-## Planificador de Comidas
-
-**RF-13:** El sistema debe permitir seleccionar recetas y asignarlas a días específicos de una semana calendario.
-
-**RF-14:** El sistema debe calcular automáticamente el costo total del menú semanal sumando el costo de las recetas seleccionadas.
-
-**RF-15:** El sistema debe generar automáticamente una lista consolidada de ingredientes basada en las recetas seleccionadas.
-
----
-
-# Requerimientos No Funcionales
-
-## Rendimiento
-
-**RNF-01:** El tiempo de carga inicial no debe superar los 2 segundos en una red de 5 Mbps.
-
-**RNF-02:** El sistema debe responder a búsquedas en menos de 1 segundo para el 95% de las solicitudes.
-
-**RNF-03:** El sistema debe soportar al menos 1,000 usuarios concurrentes manteniendo tiempos de respuesta menores a 2 segundos.
-
----
-
-## Seguridad
-
-**RNF-04:** Las contraseñas deben almacenarse utilizando un algoritmo de cifrado hash seguro.
-
-**RNF-05:** El sistema debe restringir funcionalidades según el rol del usuario autenticado.
-
----
-
-## Accesibilidad (WCAG 2.1 Nivel AA)
-
-**RNF-06:** El sistema debe garantizar una relación de contraste mínima de 4.5:1 entre texto y fondo.
-
-**RNF-07:** Todas las funcionalidades deben ser accesibles mediante navegación exclusiva con teclado.
-
-**RNF-08:** Todas las imágenes deben incluir texto alternativo descriptivo (atributo alt).
-
----
-
-## Compatibilidad
-
-**RNF-09:** La aplicación debe funcionar correctamente en las últimas dos versiones estables de Chrome, Edge y Firefox.
+¡Disfruta cocinando con CookPlanner! 🍳👨‍🍳
