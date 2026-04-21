@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CookPlanner - Inicio</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="navbar-content">
+      <a href="home.html" class="navbar-brand">🧑‍🍳 CookPlanner</a>
+      <div class="navbar-links">
+        <a href="home.html" class="active">Inicio</a>
+        <a href="planner.html">Planificador</a>
+        <a href="#" id="role-link">Mi Panel</a>
+      </div>
+      <div class="navbar-user">
+        <span id="user-name"></span>
+        <button onclick="logout()" class="btn btn-secondary">Cerrar Sesión</button>
+      </div>
+    </div>
+  </nav>
+  
+  <div class="container">
+
+    <div class="hero">
+      <h1>¡Bienvenido a CookPlanner!</h1>
+      <p>Descubre recetas deliciosas y planifica tus comidas de manera inteligente</p>
+    </div>
+    
+
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">🔍 Buscar Recetas</h2>
+        <p class="card-description">Encuentra la receta perfecta con nuestros filtros avanzados</p>
+      </div>
+      
+      <div class="form-group">
+        <input 
+          type="text" 
+          id="search-input" 
+          placeholder="Buscar por nombre, ingredientes o etiquetas..." 
+          oninput="filterRecipes()"
+        >
+      </div>
+      
+      <button onclick="toggleFilters()" class="btn btn-outline mb-4">
+        ⚙️ <span id="filter-toggle-text">Mostrar Filtros</span>
+      </button>
+      
+      <div id="filters" class="hidden">
+        <div class="grid grid-3 mb-4" style="padding-top: 1rem; border-top: 1px solid #e5e7eb;">
+          <div class="form-group">
+            <label>Categoría</label>
+            <select id="category-filter" onchange="filterRecipes()">
+              <option value="all">Todas las categorías</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label>Dificultad</label>
+            <select id="difficulty-filter" onchange="filterRecipes()">
+              <option value="all">Todas las dificultades</option>
+              <option value="easy">Fácil</option>
+              <option value="medium">Medio</option>
+              <option value="hard">Difícil</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label>Presupuesto máximo: $<span id="budget-value">50</span></label>
+            <input 
+              type="range" 
+              id="budget-filter" 
+              min="5" 
+              max="100" 
+              value="50" 
+              step="5" 
+              oninput="updateBudgetValue(); filterRecipes();"
+              style="width: 100%;"
+            >
+          </div>
+        </div>
+      </div>
+    </div>
+    
+
+    <div class="mb-6">
+      <h2 class="text-2xl font-bold mb-4">Categorías Populares</h2>
+      <div id="categories-grid" class="grid grid-4"></div>
+    </div>
+    
+
+    <div>
+      <div class="flex-between mb-4">
+        <h2 class="text-2xl font-bold">
+          <span id="results-count">0</span> Recetas
+        </h2>
+        <button onclick="clearFilters()" class="btn btn-outline btn-sm">
+          Limpiar filtros
+        </button>
+      </div>
+      
+      <div id="recipes-grid" class="grid grid-3"></div>
+      
+      <div id="no-results" class="card text-center hidden" style="padding: 3rem;">
+        <div style="font-size: 3rem; margin-bottom: 1rem;">🔍</div>
+        <h3 class="text-xl font-semibold mb-2">No se encontraron recetas</h3>
+        <p class="text-gray">Intenta ajustar tus filtros de búsqueda</p>
+      </div>
+    </div>
+  </div>
+  
+  <script src="data.js"></script>
+  <script>
+
+    const user = requireAuth();
+    if (user) {
+      document.getElementById('user-name').textContent = user.name;
+      
+
+      const roleLink = document.getElementById('role-link');
+      if (user.role === 'chef') {
+        roleLink.textContent = 'Panel de Chef';
+        roleLink.href = 'chef-dashboard.html';
+      } else if (user.role === 'admin') {
+        roleLink.textContent = 'Panel Admin';
+        roleLink.href = 'admin-dashboard.html';
+      } else {
+        roleLink.style.display = 'none';
+      }
+    }
+    
+    let recipes = [];
+    let categories = [];
+    let favorites = [];
+    
+
+    function loadData() {
+      recipes = getRecipes();
+      categories = getCategories();
+      favorites = getFavorites();
+      
+      renderCategories();
+      renderCategoryFilter();
+      filterRecipes();
+    }
+    
+
+    function renderCategories() {
+      const grid = document.getElementById('categories-grid');
+      grid.innerHTML = categories.slice(0, 6).map(cat => `
+        <div class="card" style="cursor: pointer;" onclick="selectCategory('${cat.name}')">
+          <div class="card-content text-center">
+            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">${cat.icon}</div>
+            <p class="font-semibold">${cat.name}</p>
+            <p class="text-sm text-gray">${cat.count} recetas</p>
+          </div>
+        </div>
+      `).join('');
+    }
+    
+
+    function renderCategoryFilter() {
+      const select = document.getElementById('category-filter');
+      categories.forEach(cat => {
+        const option = document.createElement('option');
+        option.value = cat.name;
+        option.textContent = `${cat.icon} ${cat.name}`;
+        select.appendChild(option);
+      });
+    }
+    
+
+    function selectCategory(categoryName) {
+      document.getElementById('category-filter').value = categoryName;
+      filterRecipes();
+    }
+    
+
+    function toggleFilters() {
+      const filters = document.getElementById('filters');
+      const toggleText = document.getElementById('filter-toggle-text');
+      
+      if (filters.classList.contains('hidden')) {
+        filters.classList.remove('hidden');
+        toggleText.textContent = 'Ocultar Filtros';
+      } else {
+        filters.classList.add('hidden');
+        toggleText.textContent = 'Mostrar Filtros';
+      }
+    }
+    
+
+    function updateBudgetValue() {
+      const value = document.getElementById('budget-filter').value;
+      document.getElementById('budget-value').textContent = value;
+    }
+    
+
+    function filterRecipes() {
+      const searchTerm = document.getElementById('search-input').value.toLowerCase();
+      const selectedCategory = document.getElementById('category-filter').value;
+      const selectedDifficulty = document.getElementById('difficulty-filter').value;
+      const maxBudget = parseFloat(document.getElementById('budget-filter').value);
+      
+      const filtered = recipes.filter(recipe => {
+        const matchesSearch = 
+          recipe.title.toLowerCase().includes(searchTerm) ||
+          recipe.description.toLowerCase().includes(searchTerm) ||
+          recipe.tags.some(tag => tag.toLowerCase().includes(searchTerm));
+        
+        const matchesCategory = selectedCategory === 'all' || recipe.category === selectedCategory;
+        const matchesDifficulty = selectedDifficulty === 'all' || recipe.difficulty === selectedDifficulty;
+        const matchesBudget = recipe.totalCost <= maxBudget;
+        
+        return matchesSearch && matchesCategory && matchesDifficulty && matchesBudget;
+      });
+      
+      renderRecipes(filtered);
+    }
+    
+
+    function renderRecipes(recipesToRender) {
+      const grid = document.getElementById('recipes-grid');
+      const noResults = document.getElementById('no-results');
+      const count = document.getElementById('results-count');
+      
+      count.textContent = recipesToRender.length;
+      
+      if (recipesToRender.length === 0) {
+        grid.innerHTML = '';
+        noResults.classList.remove('hidden');
+        return;
+      }
+      
+      noResults.classList.add('hidden');
+      
+      const difficultyLabels = {
+        easy: 'Fácil',
+        medium: 'Medio',
+        hard: 'Difícil'
+      };
+      
+      grid.innerHTML = recipesToRender.map(recipe => `
+        <div class="recipe-card">
+          <div style="position: relative;">
+            <img src="${recipe.image}" alt="${recipe.title}">
+            <div style="position: absolute; top: 0.5rem; right: 0.5rem;">
+              <span class="badge" style="background: white; color: #111827;">
+                ⭐ ${recipe.rating.toFixed(1)}
+              </span>
+            </div>
+            ${favorites.includes(recipe.id) ? `
+              <div style="position: absolute; top: 0.5rem; left: 0.5rem;">
+                <span style="font-size: 1.5rem;">❤️</span>
+              </div>
+            ` : ''}
+          </div>
+          <div class="recipe-card-content">
+            <h3 class="recipe-card-title">${recipe.title}</h3>
+            <p class="recipe-card-description">${recipe.description}</p>
+            <div class="flex gap-2 mb-2">
+              <span class="badge badge-primary">${difficultyLabels[recipe.difficulty]}</span>
+              <span class="badge">${recipe.category}</span>
+            </div>
+            <div class="recipe-card-footer">
+              <div class="flex gap-1">
+                🕒 ${recipe.prepTime} min
+              </div>
+              <div class="flex gap-1">
+                💵 $${recipe.totalCost.toFixed(2)}
+              </div>
+              <div class="flex gap-1">
+                🧑‍🍳 ${recipe.servings} porciones
+              </div>
+            </div>
+            <a href="recipe-detail.html?id=${recipe.id}" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">
+              Ver Receta
+            </a>
+          </div>
+        </div>
+      `).join('');
+    }
+    
+
+    function clearFilters() {
+      document.getElementById('search-input').value = '';
+      document.getElementById('category-filter').value = 'all';
+      document.getElementById('difficulty-filter').value = 'all';
+      document.getElementById('budget-filter').value = '50';
+      updateBudgetValue();
+      filterRecipes();
+    }
+    
+
+    loadData();
+  </script>
+</body>
+</html>
