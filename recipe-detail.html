@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Detalle de Receta - CookPlanner</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="navbar-content">
+      <a href="home.html" class="navbar-brand">🧑‍🍳 CookPlanner</a>
+      <div class="navbar-links">
+        <a href="home.html">Inicio</a>
+        <a href="planner.html">Planificador</a>
+        <a href="#" id="role-link">Mi Panel</a>
+      </div>
+      <div class="navbar-user">
+        <span id="user-name"></span>
+        <button onclick="logout()" class="btn btn-secondary">Cerrar Sesión</button>
+      </div>
+    </div>
+  </nav>
+  
+  <div class="container">
+    <button onclick="window.history.back()" class="btn btn-outline mb-4">
+      ← Volver
+    </button>
+    
+    <div id="success-alert" class="alert alert-success hidden">
+      📅 Receta agregada al planificador de hoy
+    </div>
+    
+    <div id="recipe-content"></div>
+  </div>
+  
+  <script src="data.js"></script>
+  <script>
+    const user = requireAuth();
+    if (user) {
+      document.getElementById('user-name').textContent = user.name;
+      const roleLink = document.getElementById('role-link');
+      if (user.role === 'chef') {
+        roleLink.textContent = 'Panel de Chef';
+        roleLink.href = 'chef-dashboard.html';
+      } else if (user.role === 'admin') {
+        roleLink.textContent = 'Panel Admin';
+        roleLink.href = 'admin-dashboard.html';
+      } else {
+        roleLink.style.display = 'none';
+      }
+    }
+    
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const recipeId = urlParams.get('id');
+    
+    if (!recipeId) {
+      window.location.href = 'home.html';
+    }
+    
+    const recipes = getRecipes();
+    const favorites = getFavorites();
+    const recipe = recipes.find(r => r.id === recipeId);
+    
+    if (!recipe) {
+      document.getElementById('recipe-content').innerHTML = `
+        <div class="card text-center" style="padding: 3rem;">
+          <h2 class="text-2xl font-bold mb-4">Receta no encontrada</h2>
+          <a href="home.html" class="btn btn-primary">Volver al inicio</a>
+        </div>
+      `;
+    } else {
+      renderRecipeDetail();
+    }
+    
+    function renderRecipeDetail() {
+      const isFavorite = favorites.includes(recipe.id);
+      const difficultyLabels = { easy: 'Fácil', medium: 'Medio', hard: 'Difícil' };
+      const difficultyColors = {
+        easy: 'badge-success',
+        medium: 'badge-warning',
+        hard: 'badge-danger'
+      };
+      
+      const content = `
+        <div class="grid grid-2 mb-6">
+          <div style="border-radius: 1rem; overflow: hidden; height: 400px;">
+            <img src="${recipe.image}" alt="${recipe.title}" style="width: 100%; height: 100%; object-fit: cover;">
+          </div>
+          
+          <div>
+            <h1 class="text-3xl font-bold mb-2">${recipe.title}</h1>
+            <p class="text-lg text-gray mb-4">${recipe.description}</p>
+            
+            <div class="flex gap-2 mb-4">
+              <span class="stars">
+                ${'★'.repeat(Math.round(recipe.rating))}${'☆'.repeat(5 - Math.round(recipe.rating))}
+              </span>
+              <span class="font-semibold">${recipe.rating.toFixed(1)}</span>
+              <span class="text-gray">(${recipe.reviews.length} reseñas)</span>
+            </div>
+            
+            <div class="flex gap-2 mb-4">
+              <span class="badge ${difficultyColors[recipe.difficulty]}">${difficultyLabels[recipe.difficulty]}</span>
+              <span class="badge">${recipe.category}</span>
+              ${recipe.tags.map(tag => `<span class="badge">${tag}</span>`).join('')}
+            </div>
+            
+            <div class="grid grid-3 mb-4" style="padding: 1rem; border: 1px solid #e5e7eb; border-radius: 0.5rem;">
+              <div class="text-center">
+                <div style="font-size: 1.5rem; color: #f97316; margin-bottom: 0.5rem;">🕒</div>
+                <p class="text-sm text-gray">Tiempo</p>
+                <p class="font-semibold">${recipe.prepTime} min</p>
+              </div>
+              <div class="text-center">
+                <div style="font-size: 1.5rem; color: #f97316; margin-bottom: 0.5rem;">🧑‍🍳</div>
+                <p class="text-sm text-gray">Porciones</p>
+                <p class="font-semibold">${recipe.servings}</p>
+              </div>
+              <div class="text-center">
+                <div style="font-size: 1.5rem; color: #f97316; margin-bottom: 0.5rem;">💵</div>
+                <p class="text-sm text-gray">Costo Total</p>
+                <p class="font-semibold">$${recipe.totalCost.toFixed(2)}</p>
+              </div>
+            </div>
+            
+            <div class="flex gap-2">
+              <button onclick="toggleFavoriteRecipe('${recipe.id}')" class="btn ${isFavorite ? 'btn-primary' : 'btn-outline'}" style="flex: 1;">
+                ${isFavorite ? '❤️ En Favoritos' : '🤍 Agregar a Favoritos'}
+              </button>
+              <button onclick="addToPlannerToday('${recipe.id}')" class="btn btn-primary" style="flex: 1;">
+                📅 Agregar al Planificador
+              </button>
+            </div>
+            
+            <p class="text-sm text-gray mt-4">
+              Por <span class="font-semibold">${recipe.chefName}</span>
+            </p>
+          </div>
+        </div>
+        
+        <!-- Ingredientes -->
+        <div class="card mb-6">
+          <div class="card-header">
+            <h2 class="card-title">🛒 Ingredientes</h2>
+            <p class="card-description">Costo por porción: $${(recipe.totalCost / recipe.servings).toFixed(2)}</p>
+          </div>
+          
+          ${recipe.ingredients.map(ing => `
+            <div class="flex-between" style="padding: 0.75rem; border-bottom: 1px solid #e5e7eb;">
+              <div>
+                <p class="font-semibold">${ing.name}</p>
+                <p class="text-sm text-gray">${ing.quantity}</p>
+              </div>
+              <p class="font-semibold text-orange">$${ing.price.toFixed(2)}</p>
+            </div>
+          `).join('')}
+          
+          <div class="flex-between" style="padding: 0.75rem; border-top: 2px solid #e5e7eb; font-size: 1.125rem;">
+            <p class="font-bold">Total</p>
+            <p class="font-bold text-orange">$${recipe.totalCost.toFixed(2)}</p>
+          </div>
+        </div>
+        
+        <!-- Instrucciones -->
+        <div class="card mb-6">
+          <div class="card-header">
+            <h2 class="card-title">👨‍🍳 Instrucciones</h2>
+          </div>
+          
+          ${recipe.instructions.map((inst, idx) => `
+            <div class="flex gap-4 mb-4">
+              <div style="flex-shrink: 0; width: 32px; height: 32px; background-color: #f97316; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600;">
+                ${idx + 1}
+              </div>
+              <p style="padding-top: 0.25rem;">${inst}</p>
+            </div>
+          `).join('')}
+        </div>
+        
+        <!-- Reseñas -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">💬 Reseñas y Calificaciones</h2>
+          </div>
+          
+          <div id="review-form" class="mb-6" style="background: #f9fafb; padding: 1rem; border-radius: 0.5rem;">
+            <h3 class="font-semibold mb-4">Deja tu reseña</h3>
+            
+            <div class="form-group">
+              <label>Tu calificación</label>
+              <div id="star-rating" class="flex gap-1">
+                ${[1,2,3,4,5].map(star => `
+                  <button type="button" class="star-button" onclick="setRating(${star})" onmouseover="hoverRating(${star})" onmouseout="hoverRating(0)">
+                    <span class="star" id="star-${star}" style="font-size: 2rem;">☆</span>
+                  </button>
+                `).join('')}
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="review-comment">Tu comentario</label>
+              <textarea id="review-comment" rows="4" placeholder="Cuéntanos qué te pareció esta receta..."></textarea>
+            </div>
+            
+            <button onclick="submitReview()" class="btn btn-primary">Publicar Reseña</button>
+          </div>
+          
+          <hr style="margin: 1.5rem 0;">
+          
+          <h3 class="font-semibold mb-4">Todas las reseñas (${recipe.reviews.length})</h3>
+          
+          <div id="reviews-list">
+            ${recipe.reviews.length === 0 ? `
+              <p class="text-gray text-center" style="padding: 2rem;">
+                Aún no hay reseñas. ¡Sé el primero en dejar una!
+              </p>
+            ` : recipe.reviews.map(review => `
+              <div style="border-bottom: 1px solid #e5e7eb; padding-bottom: 1rem; margin-bottom: 1rem;">
+                <div class="flex-between mb-2">
+                  <p class="font-semibold">${review.userName}</p>
+                  <div class="stars">
+                    ${'★'.repeat(review.rating)}${'☆'.repeat(5 - review.rating)}
+                  </div>
+                </div>
+                <p class="text-gray">${review.comment}</p>
+                <p class="text-sm text-gray mt-2">${review.date}</p>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+      
+      document.getElementById('recipe-content').innerHTML = content;
+    }
+    
+    let currentRating = 0;
+    
+    function setRating(rating) {
+      currentRating = rating;
+      updateStars(rating);
+    }
+    
+    function hoverRating(rating) {
+      if (currentRating === 0) {
+        updateStars(rating);
+      }
+    }
+    
+    function updateStars(rating) {
+      for (let i = 1; i <= 5; i++) {
+        const star = document.getElementById(`star-${i}`);
+        if (star) {
+          star.textContent = i <= rating ? '★' : '☆';
+          star.style.color = i <= rating ? '#fbbf24' : '#d1d5db';
+        }
+      }
+    }
+    
+    function toggleFavoriteRecipe(recipeId) {
+      toggleFavorite(recipeId);
+      window.location.reload();
+    }
+    
+    function addToPlannerToday(recipeId) {
+      const today = new Date().toISOString().split('T')[0];
+      addToPlanner(today, recipeId);
+      
+      const alert = document.getElementById('success-alert');
+      alert.classList.remove('hidden');
+      setTimeout(() => alert.classList.add('hidden'), 3000);
+    }
+    
+    function submitReview() {
+      if (currentRating === 0) {
+        alert('Por favor selecciona una calificación');
+        return;
+      }
+      
+      const comment = document.getElementById('review-comment').value.trim();
+      if (!comment) {
+        alert('Por favor escribe un comentario');
+        return;
+      }
+      
+      addReview(recipe.id, {
+        userId: user.id,
+        userName: user.name,
+        rating: currentRating,
+        comment: comment
+      });
+      
+      alert('¡Gracias por tu reseña!');
+      window.location.reload();
+    }
+  </script>
+</body>
+</html>
