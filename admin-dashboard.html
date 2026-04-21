@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel de Administración - CookPlanner</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .stat-card {
+      text-align: center;
+      padding: 1.5rem;
+    }
+    
+    .stat-icon {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    .stat-value {
+      font-size: 2rem;
+      font-weight: bold;
+      margin: 0.5rem 0;
+    }
+    
+    .stat-label {
+      color: #6b7280;
+      font-size: 0.875rem;
+    }
+    
+    .bar-chart {
+      display: flex;
+      align-items: flex-end;
+      gap: 1rem;
+      height: 250px;
+      padding: 1rem;
+      border: 1px solid #e5e7eb;
+      border-radius: 0.5rem;
+    }
+    
+    .bar {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+    }
+    
+    .bar-fill {
+      width: 100%;
+      background-color: #f97316;
+      border-radius: 0.25rem 0.25rem 0 0;
+      transition: height 0.3s;
+      min-height: 4px;
+    }
+    
+    .bar-label {
+      font-size: 0.75rem;
+      color: #6b7280;
+      margin-top: 0.5rem;
+      text-align: center;
+    }
+    
+    .bar-value {
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="navbar-content">
+      <a href="home.html" class="navbar-brand">🧑‍🍳 CookPlanner</a>
+      <div class="navbar-links">
+        <a href="home.html">Inicio</a>
+        <a href="planner.html">Planificador</a>
+        <a href="admin-dashboard.html" class="active">Panel Admin</a>
+      </div>
+      <div class="navbar-user">
+        <span id="user-name"></span>
+        <button onclick="logout()" class="btn btn-secondary">Cerrar Sesión</button>
+      </div>
+    </div>
+  </nav>
+  
+  <div class="container">
+    <div class="mb-6">
+      <h1 class="text-3xl font-bold mb-2">Panel de Administración</h1>
+      <p class="text-gray">Gestiona categorías, modera contenido y visualiza métricas del sistema</p>
+    </div>
+    
+
+    <div class="grid grid-4 mb-6">
+      <div class="card stat-card">
+        <div class="stat-icon">📚</div>
+        <p class="stat-value" id="total-recipes">0</p>
+        <p class="stat-label">Total Recetas</p>
+      </div>
+      
+      <div class="card stat-card">
+        <div class="stat-icon">🧑‍🍳</div>
+        <p class="stat-value" id="total-chefs">0</p>
+        <p class="stat-label">Chefs Activos</p>
+      </div>
+      
+      <div class="card stat-card">
+        <div class="stat-icon">👥</div>
+        <p class="stat-value" id="total-reviews">0</p>
+        <p class="stat-label">Total Reseñas</p>
+      </div>
+      
+      <div class="card stat-card">
+        <div class="stat-icon">⭐</div>
+        <p class="stat-value" id="avg-rating">0.0</p>
+        <p class="stat-label">Rating Promedio</p>
+      </div>
+    </div>
+    
+
+    <div class="tabs mb-4">
+      <button class="tab active" onclick="switchTab('metrics')">📊 Métricas</button>
+      <button class="tab" onclick="switchTab('categories')">⚙️ Categorías</button>
+      <button class="tab" onclick="switchTab('moderation')">✅ Moderación</button>
+    </div>
+    
+
+    <div id="tab-metrics">
+      <div class="grid grid-2 mb-6">
+
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Recetas por Categoría</h2>
+          </div>
+          <div id="category-chart" class="bar-chart"></div>
+        </div>
+        
+
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Recetas Mejor Calificadas</h2>
+          </div>
+          <div id="top-recipes"></div>
+        </div>
+      </div>
+      
+      <div class="grid grid-2">
+
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Distribución por Dificultad</h2>
+          </div>
+          <div id="difficulty-stats"></div>
+        </div>
+        
+
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Distribución de Presupuestos</h2>
+          </div>
+          <div id="budget-chart" class="bar-chart"></div>
+        </div>
+      </div>
+    </div>
+    
+
+    <div id="tab-categories" class="hidden">
+      <div class="card">
+        <div class="card-header">
+          <div class="flex-between">
+            <div>
+              <h2 class="card-title">Gestión de Categorías</h2>
+              <p class="card-description">Administra las categorías de recetas del sistema</p>
+            </div>
+            <button id="new-category-btn" onclick="showCategoryForm()" class="btn btn-primary">
+              ➕ Nueva Categoría
+            </button>
+          </div>
+        </div>
+        
+
+        <div id="category-form" class="hidden mb-4" style="background: #f9fafb; padding: 1rem; border-radius: 0.5rem;">
+          <h3 class="font-semibold mb-4" id="category-form-title">Nueva Categoría</h3>
+          
+          <div class="grid grid-2 mb-4">
+            <div class="form-group">
+              <label for="category-name">Nombre</label>
+              <input type="text" id="category-name" placeholder="Ej: Pizza">
+            </div>
+            <div class="form-group">
+              <label for="category-icon">Emoji/Icono</label>
+              <input type="text" id="category-icon" placeholder="Ej: 🍕">
+            </div>
+          </div>
+          
+          <div class="flex gap-2">
+            <button onclick="saveCategory()" class="btn btn-primary">✅ Guardar</button>
+            <button onclick="cancelCategoryForm()" class="btn btn-outline">❌ Cancelar</button>
+          </div>
+        </div>
+        
+
+        <table>
+          <thead>
+            <tr>
+              <th>Icono</th>
+              <th>Nombre</th>
+              <th>Recetas</th>
+              <th class="text-right">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="categories-table"></tbody>
+        </table>
+      </div>
+    </div>
+    
+
+    <div id="tab-moderation" class="hidden">
+      <div class="card mb-6">
+        <div class="card-header">
+          <h2 class="card-title">Moderación de Contenido</h2>
+          <p class="card-description">Revisa y modera recetas y comentarios recientes</p>
+        </div>
+        
+        <table>
+          <thead>
+            <tr>
+              <th>Receta</th>
+              <th>Chef</th>
+              <th>Categoría</th>
+              <th>Rating</th>
+              <th>Reseñas</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody id="moderation-table"></tbody>
+        </table>
+      </div>
+      
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Reseñas Recientes</h2>
+        </div>
+        <div id="recent-reviews"></div>
+      </div>
+    </div>
+  </div>
+  
+  <script src="data.js"></script>
+  <script>
+    const user = requireAuth();
+    if (!user || user.role !== 'admin') {
+      alert('Solo los administradores pueden acceder a esta página');
+      window.location.href = 'home.html';
+    }
+    
+    document.getElementById('user-name').textContent = user.name;
+    
+    let recipes = [];
+    let categories = [];
+    let editingCategoryId = null;
+    
+    function loadData() {
+      recipes = getRecipes();
+      categories = getCategories();
+      
+      updateStats();
+      renderMetrics();
+      renderCategoriesTable();
+      renderModerationTable();
+      renderRecentReviews();
+    }
+    
+    function updateStats() {
+      const totalRecipes = recipes.length;
+      const totalChefs = new Set(recipes.map(r => r.chefId)).size;
+      const totalReviews = recipes.reduce((sum, r) => sum + r.reviews.length, 0);
+      const avgRating = recipes.reduce((sum, r) => sum + r.rating, 0) / recipes.length || 0;
+      
+      document.getElementById('total-recipes').textContent = totalRecipes;
+      document.getElementById('total-chefs').textContent = totalChefs;
+      document.getElementById('total-reviews').textContent = totalReviews;
+      document.getElementById('avg-rating').textContent = avgRating.toFixed(1);
+    }
+    
+    function renderMetrics() {
+
+      const categoryData = categories.map(cat => ({
+        name: cat.name,
+        count: recipes.filter(r => r.category === cat.name).length
+      }));
+      
+      const maxCount = Math.max(...categoryData.map(d => d.count), 1);
+      
+      document.getElementById('category-chart').innerHTML = categoryData.slice(0, 6).map(data => `
+        <div class="bar">
+          <div class="bar-value">${data.count}</div>
+          <div class="bar-fill" style="height: ${(data.count / maxCount) * 200}px;"></div>
+          <div class="bar-label">${data.name}</div>
+        </div>
+      `).join('');
+      
+
+      const topRecipes = [...recipes].sort((a, b) => b.rating - a.rating).slice(0, 5);
+      
+      document.getElementById('top-recipes').innerHTML = topRecipes.map((recipe, idx) => `
+        <div class="flex gap-3 mb-3">
+          <div style="flex-shrink: 0; width: 32px; height: 32px; background-color: #f97316; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600;">
+            ${idx + 1}
+          </div>
+          <div style="flex: 1; min-width: 0;">
+            <p class="font-semibold" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${recipe.title}</p>
+            <p class="text-sm text-gray">${recipe.category}</p>
+          </div>
+          <div class="flex gap-1">
+            <span style="color: #fbbf24;">⭐</span>
+            <span class="font-semibold">${recipe.rating.toFixed(1)}</span>
+          </div>
+        </div>
+      `).join('');
+      
+
+      const difficultyData = [
+        { name: 'Fácil', count: recipes.filter(r => r.difficulty === 'easy').length, color: '#22c55e' },
+        { name: 'Medio', count: recipes.filter(r => r.difficulty === 'medium').length, color: '#eab308' },
+        { name: 'Difícil', count: recipes.filter(r => r.difficulty === 'hard').length, color: '#ef4444' },
+      ];
+      
+      const totalRecipes = recipes.length || 1;
+      
+      document.getElementById('difficulty-stats').innerHTML = difficultyData.map(data => {
+        const percentage = (data.count / totalRecipes * 100).toFixed(0);
+        return `
+          <div class="mb-4">
+            <div class="flex-between mb-2">
+              <span class="font-semibold">${data.name}</span>
+              <span class="text-gray">${data.count} (${percentage}%)</span>
+            </div>
+            <div style="width: 100%; height: 24px; background-color: #e5e7eb; border-radius: 0.5rem; overflow: hidden;">
+              <div style="width: ${percentage}%; height: 100%; background-color: ${data.color};"></div>
+            </div>
+          </div>
+        `;
+      }).join('');
+      
+
+      const budgetData = [
+        { name: '$0-10', count: recipes.filter(r => r.totalCost <= 10).length },
+        { name: '$10-20', count: recipes.filter(r => r.totalCost > 10 && r.totalCost <= 20).length },
+        { name: '$20-30', count: recipes.filter(r => r.totalCost > 20 && r.totalCost <= 30).length },
+        { name: '$30+', count: recipes.filter(r => r.totalCost > 30).length },
+      ];
+      
+      const maxBudgetCount = Math.max(...budgetData.map(d => d.count), 1);
+      
+      document.getElementById('budget-chart').innerHTML = budgetData.map(data => `
+        <div class="bar">
+          <div class="bar-value">${data.count}</div>
+          <div class="bar-fill" style="height: ${(data.count / maxBudgetCount) * 200}px; background-color: #22c55e;"></div>
+          <div class="bar-label">${data.name}</div>
+        </div>
+      `).join('');
+    }
+    
+    function renderCategoriesTable() {
+      const table = document.getElementById('categories-table');
+      
+      table.innerHTML = categories.map(cat => `
+        <tr>
+          <td style="font-size: 1.5rem;">${cat.icon}</td>
+          <td class="font-semibold">${cat.name}</td>
+          <td><span class="badge">${recipes.filter(r => r.category === cat.name).length} recetas</span></td>
+          <td class="text-right">
+            <button onclick="editCategory('${cat.id}')" class="btn btn-outline btn-sm">✏️</button>
+            <button onclick="deleteCategoryConfirm('${cat.id}')" class="btn btn-outline btn-sm" style="color: #dc2626;">🗑️</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+    
+    function renderModerationTable() {
+      const table = document.getElementById('moderation-table');
+      
+      table.innerHTML = recipes.slice(0, 10).map(recipe => `
+        <tr>
+          <td class="font-semibold">${recipe.title}</td>
+          <td>${recipe.chefName}</td>
+          <td><span class="badge">${recipe.category}</span></td>
+          <td>
+            <div class="flex gap-1">
+              <span style="color: #fbbf24;">⭐</span>
+              ${recipe.rating.toFixed(1)}
+            </div>
+          </td>
+          <td>${recipe.reviews.length}</td>
+          <td><span class="badge badge-success">✅ Aprobada</span></td>
+        </tr>
+      `).join('');
+    }
+    
+    function renderRecentReviews() {
+      const allReviews = recipes
+        .flatMap(recipe => 
+          recipe.reviews.map(review => ({
+            ...review,
+            recipeTitle: recipe.title,
+            recipeId: recipe.id
+          }))
+        )
+        .slice(0, 5);
+      
+      const container = document.getElementById('recent-reviews');
+      
+      if (allReviews.length === 0) {
+        container.innerHTML = '<p class="text-gray text-center" style="padding: 2rem;">No hay reseñas aún</p>';
+        return;
+      }
+      
+      container.innerHTML = allReviews.map(review => `
+        <div style="border-bottom: 1px solid #e5e7eb; padding-bottom: 1rem; margin-bottom: 1rem;">
+          <div class="flex-between mb-2">
+            <div>
+              <p class="font-semibold">${review.userName}</p>
+              <p class="text-sm text-gray">en "${review.recipeTitle}"</p>
+            </div>
+            <div class="stars">
+              ${'★'.repeat(review.rating)}${'☆'.repeat(5 - review.rating)}
+            </div>
+          </div>
+          <p class="text-gray">${review.comment}</p>
+          <p class="text-sm text-gray mt-2">${review.date}</p>
+        </div>
+      `).join('');
+    }
+    
+    function switchTab(tab) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('[id^="tab-"]').forEach(t => t.classList.add('hidden'));
+      
+      event.target.classList.add('active');
+      document.getElementById(`tab-${tab}`).classList.remove('hidden');
+    }
+    
+    function showCategoryForm() {
+      document.getElementById('category-form').classList.remove('hidden');
+      document.getElementById('new-category-btn').classList.add('hidden');
+    }
+    
+    function cancelCategoryForm() {
+      document.getElementById('category-form').classList.add('hidden');
+      document.getElementById('new-category-btn').classList.remove('hidden');
+      document.getElementById('category-name').value = '';
+      document.getElementById('category-icon').value = '';
+      editingCategoryId = null;
+    }
+    
+    function saveCategory() {
+      const name = document.getElementById('category-name').value.trim();
+      const icon = document.getElementById('category-icon').value.trim();
+      
+      if (!name || !icon) {
+        alert('Por favor completa todos los campos');
+        return;
+      }
+      
+      if (editingCategoryId) {
+        updateCategory(editingCategoryId, name, icon);
+      } else {
+        addCategory(name, icon);
+      }
+      
+      cancelCategoryForm();
+      loadData();
+    }
+    
+    function editCategory(id) {
+      const category = categories.find(c => c.id === id);
+      if (!category) return;
+      
+      editingCategoryId = id;
+      document.getElementById('category-form-title').textContent = 'Editar Categoría';
+      document.getElementById('category-name').value = category.name;
+      document.getElementById('category-icon').value = category.icon;
+      
+      showCategoryForm();
+    }
+    
+    function deleteCategoryConfirm(id) {
+      if (confirm('¿Estás seguro? Las recetas de esta categoría no se eliminarán.')) {
+        deleteCategory(id);
+        loadData();
+      }
+    }
+    
+    loadData();
+  </script>
+</body>
+</html>
